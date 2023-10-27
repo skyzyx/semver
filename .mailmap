@@ -1,0 +1,50 @@
+# This file allows mapping several author and committer email addresses and
+# names to a single canonical one for `git shortlog`, `git log --author`,
+# or `git check-mailmap`.
+#
+# For example, if you commit as `random.person@example.com` but sometimes use
+# "Rañdom Person" and sometimes "Random Person" as name and you want the former
+# to be your canonical name, add
+#
+#     Rañdom Person <random.person@example.com>
+#
+# If you commit as both `random.person@example.com` and `ranp@example.com` and
+# you want the former to be your canonical email address, add
+#
+#     <random.person@example.com> <ranp@example.com>
+#
+# Combinations of both are possible too, see
+# https://git-scm.com/docs/gitmailmap for format details.
+#
+# You can commit changes for your own names and email addresses without review.
+# If you want to add entries for other people, please have them review the
+# addition.
+#
+# Please keep this file sorted.
+
+Adam Reese <adam@reese.io>
+Alastair Firth <afirth@users.noreply.github.com>
+Aniruddha Maru <aniruddhamaru@gmail.com>
+arshchimni <a-chimni@mercari.com>
+Brian-Williams <Brian-Williams@users.noreply.github.com>
+Dave Goddard <dave@goddard.id.au>
+Grey Baker <greysteil@gmail.com>
+Jeremy Carroll <jjc@syapse.com>
+ka <kazhuravlev@users.noreply.github.com>
+Kirill Zhuravlev <kazhuravlev@fastmail.com>
+Kyle Michel <Kyle.Michel@ontariosystems.com>
+Mark Rosemaker <48681726+MarkRosemaker@users.noreply.github.com>
+Matt Butcher <technosophos@gmail.com> <mbutcher@engineyard.com> <mbutcher@deis.com>
+Matt Farina <matt@mattfarina.com>
+mh-cbon <mh-cbon@users.noreply.github.com>
+mtt0 <retmain@foxmail.com>
+Nuruddin Ashr <uudashr@gmail.com>
+Riley Avron <riley.avron@gmail.com>
+Roli Schilter <roli@schilter.me>
+Ryan Parman <ryan@ryanparman.com>
+ryancurrah <ryan@currah.ca>
+Saddam H <thedevsaddam@gmail.com>
+Sam Boyer <tech@samboyer.org>
+Simon Bein <simontheleg@gmail.com>
+zak <zknill@users.noreply.github.com>
+西郷 隆盛 <mh-cbon@users.noreply.github.com>

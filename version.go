@@ -472,7 +472,7 @@ func (v Version) MarshalText() ([]byte, error) {
 }
 
 // Scan implements the SQL.Scanner interface.
-func (v *Version) Scan(value interface{}) error {
+func (v *Version) Scan(value any) error {
 	var s string
 	s, _ = value.(string)
 	temp, err := NewVersion(s)
@@ -599,7 +599,7 @@ func comparePrePart(s, o string) int {
 }
 
 // Like strings.ContainsAny but does an only instead of any.
-func containsOnly(s string, comp string) bool {
+func containsOnly(s, comp string) bool {
 	return strings.IndexFunc(s, func(r rune) bool {
 		return !strings.ContainsRune(comp, r)
 	}) == -1

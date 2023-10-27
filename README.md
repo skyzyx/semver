@@ -82,7 +82,7 @@ differences to notes between these two methods of comparison.
 1. When two versions are compared using functions such as `Compare`, `LessThan`,
    and others it will follow the specification and always include prereleases
    within the comparison. It will provide an answer that is valid with the
-   comparison section of the spec at https://semver.org/#spec-item-11
+   comparison section of the spec at <https://semver.org/#spec-item-11>
 2. When constraint checking is used for checks or validation it will follow a
    different set of rules that are common for ranges with tools like npm/js
    and Rust/Cargo. This includes considering prereleases to be invalid if the

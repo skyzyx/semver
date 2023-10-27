@@ -17,14 +17,12 @@ type Constraints struct {
 // NewConstraint returns a Constraints instance that a Version instance can
 // be checked against. If there is a parse error it will be returned.
 func NewConstraint(c string) (*Constraints, error) {
-
 	// Rewrite - ranges into a comparison operation.
 	c = rewriteRange(c)
 
 	ors := strings.Split(c, "||")
 	or := make([][]*constraint, len(ors))
 	for k, v := range ors {
-
 		// TODO: Find a way to validate and fetch all the constraints in a simpler form
 
 		// Validate the segment
@@ -95,9 +93,7 @@ func (cs Constraints) Validate(v *Version) (bool, []error) {
 					prerelesase = true
 				}
 				joy = false
-
 			} else {
-
 				if _, err := c.check(v); err != nil {
 					e = append(e, err)
 					joy = false
@@ -151,9 +147,11 @@ func (cs Constraints) MarshalText() ([]byte, error) {
 	return []byte(cs.String()), nil
 }
 
-var constraintOps map[string]cfunc
-var constraintRegex *regexp.Regexp
-var constraintRangeRegex *regexp.Regexp
+var (
+	constraintOps        map[string]cfunc
+	constraintRegex      *regexp.Regexp
+	constraintRangeRegex *regexp.Regexp
+)
 
 // Used to find individual constraints within a multi-constraint string
 var findConstraintRegex *regexp.Regexp
@@ -269,7 +267,6 @@ func parseConstraint(c string) (*constraint, error) {
 
 		con, err := NewVersion(ver)
 		if err != nil {
-
 			// The constraintRegex should catch any regex parsing errors. So,
 			// we should never get here.
 			return nil, errors.New("constraint Parser Error")
@@ -287,7 +284,6 @@ func parseConstraint(c string) (*constraint, error) {
 	// is equivalent to * or >=0.0.0
 	con, err := StrictNewVersion("0.0.0")
 	if err != nil {
-
 		// The constraintRegex should catch any regex parsing errors. So,
 		// we should never get here.
 		return nil, errors.New("constraint Parser Error")
@@ -307,7 +303,6 @@ func parseConstraint(c string) (*constraint, error) {
 // Constraint functions
 func constraintNotEqual(v *Version, c *constraint) (bool, error) {
 	if c.dirty {
-
 		// If there is a pre-release on the version but the constraint isn't looking
 		// for them assume that pre-releases are not compatible. See issue 21 for
 		// more details.
@@ -346,7 +341,6 @@ func constraintNotEqual(v *Version, c *constraint) (bool, error) {
 }
 
 func constraintGreaterThan(v *Version, c *constraint) (bool, error) {
-
 	// If there is a pre-release on the version but the constraint isn't looking
 	// for them assume that pre-releases are not compatible. See issue 21 for
 	// more details.
@@ -407,7 +401,6 @@ func constraintLessThan(v *Version, c *constraint) (bool, error) {
 }
 
 func constraintGreaterThanEqual(v *Version, c *constraint) (bool, error) {
-
 	// If there is a pre-release on the version but the constraint isn't looking
 	// for them assume that pre-releases are not compatible. See issue 21 for
 	// more details.
@@ -533,7 +526,6 @@ func constraintCaret(v *Version, c *constraint) (bool, error) {
 
 	// ^ when the major > 0 is >=x.y.z < x+1
 	if c.con.Major() > 0 || c.minorDirty {
-
 		// ^ has to be within a major range for > 0. Everything less than was
 		// filtered out with the LessThan call above. This filters out those
 		// that greater but not within the same major range.

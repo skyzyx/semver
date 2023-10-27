@@ -129,16 +129,6 @@ clean-go:
 	@ $(ECHO) "\033[1;33m=====> Cleaning Go cache...\033[0m"
 	$(GO) clean -i -r -x -testcache -modcache -cache
 
-.PHONY: clean-tests
-## clean-tests: [clean] Cleans all files/folders inside the examples directory which begin with a ".".
-clean-tests:
-	@ $(ECHO) " "
-	@ $(ECHO) "\033[1;33m=====> Cleaning artifacts from tests...\033[0m"
-	- find . -type d -name ".terraform" | xargs rm -Rf
-	- find . -type d -name "terratest-*" | xargs rm -Rf
-	- find . -type f -name "terraform.tfstate*" | xargs rm -Rf
-	- find ./examples -type d -name "\.*" | xargs rm -Rf
-
 .PHONY: clean-bench
 ## clean-bench: [clean] Cleans all benchmarking-related files.
 clean-bench:
@@ -147,55 +137,31 @@ clean-bench:
 	- find . -type f -name "__*.out" | xargs rm -Rf
 	- find . -type f -name "*.test" | xargs rm -Rf
 
-.PHONY: clean-tf
-## clean-tf: [clean] Clean Terraform leftovers.
-clean-tf:
-	@ $(ECHO) " "
-	@ $(ECHO) "\033[1;33m=====> Cleaning Terraform artifacts...\033[0m"
-	find . -type d -name "terraform.d" | xargs -I% rm -Rfv "%"
-	find . -type d -name ".terraform" | xargs -I% rm -Rfv "%"
-	find . -type f -name ".terraform.lock.hcl" | xargs -I% rm -fv "%"
-
 .PHONY: clean
 ## clean: [clean]* Runs ALL cleaning tasks (except the Go cache).
-clean: clean-bench clean-tf clean-tests
+clean: clean-bench
 
 #-------------------------------------------------------------------------------
 # Documentation
 
 .PHONY: docs
 ## docs: [docs]* Runs primary documentation tasks.
-docs: docs-provider docs-cli
-
-.PHONY: docs-provider
-## docs-provider: [docs] Generate Terraform Registry documentation.
-docs-provider:
-	@ $(ECHO) " "
-	@ $(ECHO) "\033[1;33m=====> Generating Terraform provider documentation...\033[0m"
-	$(GO) generate -v ./...
+docs: docs-cli
 
 .PHONY: docs-cli
 ## docs-cli: [docs] Preview the Go library documentation on the CLI.
 docs-cli:
 	@ $(ECHO) " "
 	@ $(ECHO) "\033[1;33m=====> Displaying Go CLI documentation...\033[0m"
-	$(GO) doc -C corefunc/ -all
+	$(GO) doc -C -all
 
 .PHONY: docs-serve
 ## docs-serve: [docs] Preview the Go library documentation as displayed on pkg.go.dev.
 docs-serve:
 	@ $(ECHO) " "
 	@ $(ECHO) "\033[1;33m=====> Displaying Go HTTP documentation...\033[0m"
-	open http://localhost:6060/pkg/github.com/northwood-labs/terraform-provider-corefunc/corefunc/
+	open http://localhost:6060/pkg/github.com/skyzyx/semver/
 	godoc -index -links
-
-.PHONY: binsize
-## binsize: [docs] Analyze the size of the binary by Go package.
-binsize:
-	@ $(ECHO) " "
-	@ $(ECHO) "\033[1;33m=====> Displaying Go HTTP documentation...\033[0m"
-	$(GO) tool nm -size "$(GOBIN)/$(BINARY_NAME)" | go-binsize-treemap > binsize.svg
-	rsvg-convert --width=2000 --format=png --output="binsize.png" "binsize.svg"
 
 #-------------------------------------------------------------------------------
 # Linting
@@ -238,9 +204,6 @@ pre-commit:
 license:
 	@ $(ECHO) " "
 	@ $(ECHO) "\033[1;33m=====> Checking license statistics...\033[0m"
-	@ $(ECHO) "Ignored:"
-	@ tomljson .licensei.toml | jq -Mr '.ignored[] | " - \(.)"'
-	@ $(ECHO) " "
 	@ - licensei stat
 
 	@ $(ECHO) " "
@@ -249,10 +212,6 @@ license:
 	@ $(ECHO) " "
 	@ - licensei list
 
-	@ $(ECHO) " "
-	@ $(ECHO) "\033[1;33m=====> Checking license headers...\033[0m"
-	@ $(ECHO) "Missing/outdated:"
-	@ - licensei header
 	@ $(ECHO) " "
 
 .PHONY: unconvert
@@ -275,105 +234,39 @@ lint: vuln license unconvert pre-commit
 
 .PHONY: test
 ## test: [test]* Runs ALL tests.
-test: unit examples acc mutate bats
-
-.PHONY: list-tests
-## list-tests: [test] Lists all of the tests that are available to run.
-list-tests:
-	@ $(ECHO) " "
-	@ $(ECHO) "\033[1;33m=====> Unit tests...\033[0m"
-	@ $(ECHO) "make unit"
-	@ cat ./corefunc/*_test.go | ggrep "func Test" | gsed 's/func\s//g' | gsed -r 's/\(.*//g' | gsed -r 's/Test/make unit NAME=/g'
-
-	@ $(ECHO) " "
-	@ $(ECHO) "\033[1;33m=====> Terraform acceptance tests...\033[0m"
-	@ $(ECHO) "make acc"
-	@ cat ./corefuncprovider/*_test.go | ggrep "func TestAcc" | gsed 's/func\s//g' | gsed -r 's/\(.*//g' | gsed -r 's/TestAcc/make acc NAME=/g'
-
-	@ $(ECHO) " "
-	@ $(ECHO) "\033[1;33m=====> Example tests...\033[0m"
-	@ $(ECHO) "make examples"
-	@ cat ./corefunc/*_test.go | ggrep "func Example" | gsed 's/func\s//g' | gsed -r 's/\(.*//g' | gsed -r 's/Example/make examples NAME=/g'
-
-	@ $(ECHO) " "
-	@ $(ECHO) "\033[1;33m=====> Fuzzing tests...\033[0m"
-	@ cat ./corefunc/*_test.go | ggrep "func Fuzz" | gsed 's/func\s//g' | gsed -r 's/\(.*//g' | gsed -r 's/Fuzz/make fuzz NAME=/g'
-
-	@ $(ECHO) " "
-	@ $(ECHO) "\033[1;33m=====> BATS tests...\033[0m"
-	@ $(ECHO) "make bats"
-
-.PHONY: bats
-## bats: [test] Tests the output of the provider using tfschema and BATS.
-bats: build
-	@ $(ECHO) " "
-	@ $(ECHO) "\033[1;33m=====> Running BATS/tfschema tests...\033[0m"
-	bats bats/*
-
-.PHONY: acc
-## acc: [test] Runs Terraform provider acceptance tests. Set NAME= (without 'TestAcc') to run a specific test by name
-acc:
-	@ $(ECHO) " "
-	@ $(ECHO) "\033[1;33m=====> Running acceptance tests...\033[0m"
-
-ifeq ($(DEBUG), true)
-	PROVIDER_DEBUG=1 TF_ACC=1 go test -run=TestAcc$(NAME) -count=1 -parallel=$(shell nproc) -timeout 30m -coverpkg=./corefuncprovider/... -coverprofile=__coverage.out -v ./corefuncprovider/...
-else
-	TF_ACC=1 gotestsum --format testname -- -run=TestAcc$(NAME) -count=1 -parallel=$(shell nproc) -timeout 30m -coverpkg=./corefuncprovider/... -coverprofile=__coverage.out -v ./corefuncprovider/...
-endif
-	@ go-cover-treemap -coverprofile __coverage.out > acc-coverage.svg
-	@ rsvg-convert --width=2000 --format=png --output="acc-coverage.png" "acc-coverage.svg"
+test: unit fuzz
 
 .PHONY: unit
-## unit: [test] Runs unit tests. Set NAME= (without 'Test') to run a specific test by name
+## unit: [test] Runs unit tests.
 unit:
 	@ $(ECHO) " "
 	@ $(ECHO) "\033[1;33m=====> Running unit tests...\033[0m"
-	gotestsum --format testname -- -run=Test$(NAME) -count=1 -parallel=$(shell nproc) -timeout 30s -coverpkg=./corefunc/... -coverprofile=__coverage.out -v ./corefunc/...
+	gotestsum --format testname -- -count=1 -parallel=$(shell nproc) -timeout 30s -coverpkg=./... -coverprofile=__coverage.out -v ./...
 	@ go-cover-treemap -coverprofile __coverage.out > unit-coverage.svg
 	@ rsvg-convert --width=2000 --format=png --output="unit-coverage.png" "unit-coverage.svg"
 
-.PHONY: mutate
-## mutate: [test] Runs mutation tests.
-mutate:
-	@ $(ECHO) " "
-	@ $(ECHO) "\033[1;33m=====> Running mutation tests...\033[0m"
-	cd ./corefunc && $(GO) test -tags=mutation -count=1 -parallel=$(shell nproc) -timeout 30s -ooze.v=true | ggrep -v "^[[:lower:]]" | ggrep -v "^)"
-
-.PHONY: examples
-## examples: [test] Runs tests for examples. Set NAME= (without 'Example') to run a specific test by name
-examples:
-	@ $(ECHO) " "
-	@ $(ECHO) "\033[1;33m=====> Running tests for examples...\033[0m"
-	gotestsum --format testname -- -run=Example$(NAME) -count=1 -parallel=$(shell nproc) -timeout 30s -coverpkg=./corefunc/... -coverprofile=__coverage.out -v ./corefunc/...
-
 .PHONY: fuzz
-## fuzz: [test]* Runs the fuzzer for 10 minutes. Set NAME= (without 'Fuzz') to run a specific test by name
+## fuzz: [test]* Runs the fuzzer for 1 minute per test.
 fuzz:
 	@ $(ECHO) " "
 	@ $(ECHO) "\033[1;33m=====> Running the fuzzer (https://go.dev/doc/tutorial/fuzz)...\033[0m"
-	$(GO) test -run='^$$' -fuzz=Fuzz$(NAME) -fuzztime 10m -parallel=$(shell nproc) -v ./corefunc/...
+	$(GO) test -run='^$$' -fuzz=FuzzNewConstraint -fuzztime 1m -parallel=$(shell nproc) -v ./...
+	$(GO) test -run='^$$' -fuzz=FuzzNewVersion -fuzztime 1m -parallel=$(shell nproc) -v ./...
+	$(GO) test -run='^$$' -fuzz=FuzzStrictNewVersion -fuzztime 1m -parallel=$(shell nproc) -v ./...
 
 .PHONY: quickbench
 ## quickbench: [test]* Runs the benchmarks with minimal data for a quick check
 quickbench:
 	@ $(ECHO) " "
 	@ $(ECHO) "\033[1;33m=====> Running "quick" benchmark...\033[0m"
-	$(GO) test -bench=. -timeout 60m ./corefunc
+	$(GO) test -bench=. -timeout 60m ./...
 
 .PHONY: bench
 ## bench: [test]* Runs the benchmarks with enough data for analysis with benchstat.
 bench:
 	@ $(ECHO) " "
 	@ $(ECHO) "\033[1;33m=====> Running "full" benchmark...\033[0m"
-	$(GO) test -bench=. -count=6 -timeout 60m -benchmem -cpuprofile=__cpu.out -memprofile=__mem.out -trace=__trace.out ./corefunc | tee __bench-$(shell date --utc "+%Y%m%dT%H%M%SZ").out
-
-.PHONY: pgo
-## pgo: [test] Runs the benchmarks with enough data for use with Profile-Guided Optimization.
-pgo:
-	@ $(ECHO) " "
-	@ $(ECHO) "\033[1;33m=====> Running benchmark for PGO data...\033[0m"
-	TF_ACC=1 go test -run=^TestAcc -count=6 -timeout 60m -cpuprofile=default.pgo -parallel=$(shell nproc) ./corefuncprovider/...
+	$(GO) test -bench=. -count=6 -timeout 60m -benchmem -cpuprofile=__cpu.out -memprofile=__mem.out -trace=__trace.out ./... | tee __bench-$(shell date --utc "+%Y%m%dT%H%M%SZ").out
 
 .PHONY: view-cov-cli
 ## view-cov-cli: [test] After running test or unittest, this will view the coverage report on the CLI.
